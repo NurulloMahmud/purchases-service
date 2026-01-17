@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install gRPC dependencies
+RUN pip install --no-cache-dir grpcio grpcio-tools
+
+# Copy proto and server
+COPY grpc_mock/proto/ ./proto/
+COPY grpc_mock/server.py .
+
+# Generate gRPC code
+RUN python -m grpc_tools.protoc \
+    -I./proto \
+    --python_out=. \
+    --grpc_python_out=. \
+    ./proto/ambassador.proto
+
+EXPOSE 50051
+
+CMD ["python", "server.py"]

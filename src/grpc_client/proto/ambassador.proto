@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package ambassador;
+
+option go_package = "github.com/yourorg/ambassadors/proto";
+
+service AmbassadorValidation {
+    // Validates a list of ambassador IDs and returns their prices
+    rpc ValidateAmbassadors(ValidateRequest) returns (ValidateResponse);
+}
+
+message ValidateRequest {
+    repeated int64 ambassador_ids = 1;
+}
+
+message ValidateResponse {
+    repeated ValidAmbassador valid_ambassadors = 1;
+    repeated int64 invalid_ids = 2;
+}
+
+message ValidAmbassador {
+    int64 ambassador_id = 1;
+    int64 price = 2;  // in tiyin (smallest currency unit)
+}

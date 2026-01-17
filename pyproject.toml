@@ -1,0 +1,63 @@
+[project]
+name = "purchases-service"
+version = "0.1.0"
+description = "Purchases microservice with Payme integration"
+requires-python = ">=3.11"
+dependencies = [
+    # Web framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    
+    # Database
+    "tortoise-orm[asyncpg]>=0.22.0",
+    "asyncpg>=0.30.0",
+    "aerich>=0.8.0",
+    
+    # Redis & task queue
+    "redis>=5.2.0",
+    "arq>=0.26.0",
+    
+    # gRPC
+    "grpcio>=1.68.0",
+    "grpcio-tools>=1.68.0",
+    "protobuf>=5.29.0",
+    
+    # Payment
+    "paytechuz>=1.0.0",
+    
+    # Email
+    "httpx>=0.28.0",
+    
+    # Auth
+    "pyjwt>=2.10.0",
+    
+    # Settings & validation
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    
+    # Utilities
+    "python-multipart>=0.0.18",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+]
+
+[tool.aerich]
+tortoise_orm = "src.config.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

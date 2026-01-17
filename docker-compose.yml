@@ -1,0 +1,82 @@
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: purchases
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for ARQ and pub/sub
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # gRPC mock server for Ambassadors service
+  grpc-mock:
+    build:
+      context: .
+      dockerfile: Dockerfile.grpc-mock
+    ports:
+      - "50051:50051"
+    depends_on:
+      - redis
+
+  # Main purchases service
+  purchases-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/purchases
+      REDIS_URL: redis://redis:6379
+      AMBASSADOR_GRPC_HOST: grpc-mock
+      AMBASSADOR_GRPC_PORT: 50051
+      DEBUG: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      grpc-mock:
+        condition: service_started
+    volumes:
+      - ./src:/app/src:ro  # Hot reload in dev
+
+  # ARQ worker for background tasks
+  arq-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: arq src.tasks.worker.WorkerSettings
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/purchases
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
