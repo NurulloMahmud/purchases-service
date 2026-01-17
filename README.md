@@ -149,7 +149,3 @@ Key settings:
 ```bash
 pytest
 ```
-
-## License
-
-MIT
